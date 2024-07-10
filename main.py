@@ -25,7 +25,7 @@ if sys.platform == 'win32':
         pass # Windows XP doesn't support monitor scaling, so just do nothing. 
 
 if len(sys.argv)<2:
-    default = "cl" # <<< Replace this default to liking
+    default = "pc" # <<< Replace this default to liking
 else:
     default = sys.argv[1]
 
