@@ -17,7 +17,6 @@ pygame.display.set_icon(icon)
 if sys.platform == 'win32':
     # On Windows, the monitor scaling can be set to something besides normal 100%.
     # PyScreeze and Pillow needs to account for this to make accurate screenshots.
-    # TODO - How does macOS and Linux handle monitor scaling?
     import ctypes
     try:
        ctypes.windll.user32.SetProcessDPIAware()
@@ -25,7 +24,7 @@ if sys.platform == 'win32':
         pass # Windows XP doesn't support monitor scaling, so just do nothing. 
 
 if len(sys.argv)<2:
-    default = "pc" # <<< Replace this default to liking
+    default = "blank" # <<< Replace this default to liking
 else:
     default = sys.argv[1]
 
@@ -79,7 +78,7 @@ gate_styles["input"] = [25*input_length,input_length,input_length,(123,74,195)]
 
 class Component:
     def __init__(self, id, argument):
-        self.gate_type, values, destinations, position = argument
+        self.gate_type, values, destinations, position, *_ = argument
         self.id = id
         self.rect = pygame.Rect(position,(GATE_WIDTH, gate_styles[self.gate_type][0]))
         self.wires = []
@@ -96,10 +95,18 @@ class Component:
         else:
             self.destinations = [None] * gate_styles[self.gate_type][2]
 
-        if self.gate_type in ["sr_latch", "d_latch"]:
-            self.memory = [0]
-        elif self.gate_type in ["3reg"]:
-            self.memory = [0,0,0]
+        if len(argument) > 4:
+            self.memory = argument[4]
+        else:
+            if self.gate_type in ["sr_latch", "d_latch"]:
+                self.memory = [0]
+            elif self.gate_type in ["3reg"]:
+                self.memory = [0,0,0]
+            elif self.gate_type in ["3mem", "6mem"]:
+                self.memory = {}
+            else:
+                self.memory = None
+
 
     def update_outports(self): #updates destination gates' sources
         for num, destination in enumerate(self.destinations):
@@ -194,12 +201,27 @@ class Component:
                     self.memory = inputs[:3]
                 outputs = self.memory
             case "3mem":
-                if inputs[3] == 1:
-                    self.memory = inputs[:3]
-                if inputs[3] == -1:
-                    outputs = self.memory
+                location = 9*inputs[3]+3*inputs[4]+inputs[5]
+                if inputs[6] == 1:
+                    self.memory[location] = inputs[:3]
+                if inputs[6] == -1:
+                    if location in self.memory:
+                        outputs = self.memory[location]
+                    else:
+                        outputs = [0,0,0]
                 else:
-                    outputs = [0] * 3
+                    return
+            case "3mem":
+                location = 729*inputs[3]+243*inputs[4]+81*inputs[5]+9*inputs[6]+3*inputs[7]+inputs[8]
+                if inputs[9] == 1:
+                    self.memory[location] = inputs[:3]
+                if inputs[9] == -1:
+                    if location in self.memory:
+                        outputs = self.memory[location]
+                    else:
+                        outputs = [0,0,0]
+                else:
+                    return
             case "relay":
                 if inputs[3] == 1:
                     outputs = inputs[:3]
@@ -414,7 +436,10 @@ def save_circuit():
     
     for item in circuit:
         component = circuit[item]
-        output_circuit[item] = [component.gate_type, component.values, component.destinations, [component.rect[0],component.rect[1]]]
+        if component.memory:
+            output_circuit[item] = [component.gate_type, component.values, component.destinations, [component.rect[0],component.rect[1]], component.memory]
+        else:
+            output_circuit[item] = [component.gate_type, component.values, component.destinations, [component.rect[0],component.rect[1]]]
 
     with open(f'./circuits/{file_name}.pkl', 'wb') as f:
         pickle.dump(output_circuit, f)
