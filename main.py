@@ -24,7 +24,7 @@ if sys.platform == 'win32':
         pass # Windows XP doesn't support monitor scaling, so just do nothing. 
 
 if len(sys.argv)<2:
-    default = "blank" # <<< Replace this default to liking
+    default = "cpu" # <<< Replace this default to liking
 else:
     default = sys.argv[1]
 
@@ -102,7 +102,7 @@ class Component:
                 self.memory = [0]
             elif self.gate_type in ["3reg"]:
                 self.memory = [0,0,0]
-            elif self.gate_type in ["3mem", "6mem"]:
+            elif self.gate_type in ["3mem", "control"]:
                 self.memory = {}
             else:
                 self.memory = None
@@ -211,15 +211,15 @@ class Component:
                         outputs = [0,0,0]
                 else:
                     return
-            case "3mem":
-                location = 729*inputs[3]+243*inputs[4]+81*inputs[5]+9*inputs[6]+3*inputs[7]+inputs[8]
-                if inputs[9] == 1:
-                    self.memory[location] = inputs[:3]
-                if inputs[9] == -1:
+            case "control":
+                location = 729*inputs[6]+243*inputs[7]+81*inputs[8]+9*inputs[9]+3*inputs[10]+inputs[11]
+                if inputs[12] == 1:
+                    self.memory[location] = inputs[:6]
+                if inputs[12] == -1:
                     if location in self.memory:
                         outputs = self.memory[location]
                     else:
-                        outputs = [0,0,0]
+                        outputs = [0,0,0,0,0,0]
                 else:
                     return
             case "relay":
@@ -492,6 +492,7 @@ while True:
 
                 gate_type = input("new gate type >")
                 if gate_type not in gate_styles:
+                    print(f"{gate_type} gate not recognised")
                     continue
                 gate_style = gate_styles[gate_type]
                 circuit[next_component] = Component(next_component, [gate_type, None, None, (0,0)])
