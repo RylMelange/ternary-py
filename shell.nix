@@ -7,7 +7,7 @@ in pkgs.mkShell {
     ]))
   ];
   shellHook = ''
-    alias terun='python main.py'
+    alias terun='python src/main.py'
   '';
 }
 

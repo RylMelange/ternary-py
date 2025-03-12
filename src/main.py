@@ -24,9 +24,9 @@ if sys.platform == 'win32':
         pass # Windows XP doesn't support monitor scaling, so just do nothing. 
 
 if len(sys.argv)<2:
-    default = "cpu" # <<< Replace this default to liking
+    blueprint = "cpu" # <<< Replace this default to liking
 else:
-    default = sys.argv[1]
+    blueprint = sys.argv[1]
 
 
 #WINDOW_SIZE = (800,400)
@@ -48,11 +48,11 @@ selected_gate = None
 
 
 try: 
-    with open(f'./circuits/{default}.pkl', 'rb') as f:
+    with open(f'./circuits/{blueprint}.pkl', 'rb') as f:
         input_circuit = pickle.load(f)
-    print(f"default input file [{default}] loaded")
+    print(f"blueprint file [{blueprint}] loaded")
 except:
-    print(f"no default input file (./circuits/{default}.pkl) detected, loading standard MUL circuit")
+    print(f"no blueprint file (./circuits/{blueprint}.pkl) detected, loading standard MUL circuit")
     input_circuit = {
     0: ["input",    [1,1,1,0,0,0,-1,-1,-1],  [None,None,None,None,None,None,None,None,None],   [50,300] ],
     1: ["split",    None,   [(4,0),(3,0)],   [200,300]],
